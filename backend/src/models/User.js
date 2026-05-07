@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+const AVAILABILITY_PREFERENCE = ['AVAILABLE', 'UNAVAILABLE'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -35,9 +36,33 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Pincode is required'],
       trim: true,
     },
-    isDonor: {
+    // Whether the user has opted into the donor programme at all.
+    donorEnrolled: {
       type: Boolean,
       default: true,
+    },
+    // User-controlled intent; RECOVERING is derived, not stored.
+    availabilityPreference: {
+      type: String,
+      enum: AVAILABILITY_PREFERENCE,
+      default: 'AVAILABLE',
+    },
+    // Optional reason when user manually sets preference to UNAVAILABLE.
+    manualUnavailableReason: {
+      type: String,
+      trim: true,
+    },
+    // Cached from the donations collection (MAX donatedAt where verified=true).
+    // Updated atomically when a donation is marked COMPLETED.
+    lastDonationDate: {
+      type: Date,
+      default: null,
+      validate: {
+        validator(v) {
+          return v === null || v <= new Date();
+        },
+        message: 'lastDonationDate cannot be in the future',
+      },
     },
     donationsCount: {
       type: Number,
@@ -48,8 +73,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// `unique: true` on email already creates an index; pincode and bloodGroup
-// get explicit indexes to speed up donor-matching queries.
+// Donor-matching query shape: WHERE availabilityPreference = 'AVAILABLE'
+// AND (lastDonationDate IS NULL OR lastDonationDate < now - 56d)
+// Composite index covers both predicates.
+userSchema.index({ availabilityPreference: 1, lastDonationDate: 1 });
 userSchema.index({ pincode: 1 });
 userSchema.index({ bloodGroup: 1 });
 

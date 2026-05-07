@@ -12,4 +12,10 @@ export const authApi = {
   me: () => api.get('/auth/me').then((r) => r.data),
 }
 
+export const donorApi = {
+  getStatus: () => api.get('/donors/status').then((r) => r.data),
+  setAvailability: (preference, reason) =>
+    api.put('/donors/availability', { preference, reason }).then((r) => r.data),
+}
+
 export default api
