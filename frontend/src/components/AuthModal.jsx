@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -20,10 +20,12 @@ const emptySignup = {
   name: '',
   email: '',
   password: '',
+  confirmPassword: '',
   role: 'user',
   bloodGroup: 'O+',
   pincode: '',
   phone: '',
+  donorEnrolled: true,
 }
 
 const emptyLogin = { email: '', password: '', role: 'user' }
@@ -34,6 +36,8 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
   const [login, setLogin] = useState(emptyLogin)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const { login: doLogin, register: doRegister } = useAuth()
   const navigate = useNavigate()
@@ -42,15 +46,22 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
     if (open) {
       setMode(initialMode)
       setError('')
+      setShowPassword(false)
+      setShowConfirmPassword(false)
     }
   }, [open, initialMode])
 
   const handleSignup = async (e) => {
     e.preventDefault()
     setError('')
+    if (signup.password !== signup.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
     setSubmitting(true)
     try {
       const payload = { ...signup }
+      delete payload.confirmPassword
       if (payload.role === 'hospital') delete payload.bloodGroup
       await doRegister(payload)
       onOpenChange(false)
@@ -174,14 +185,47 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="signup-password">Password</Label>
-              <Input
-                id="signup-password"
-                type="password"
-                required
-                minLength={6}
-                value={signup.password}
-                onChange={(e) => setSignup({ ...signup, password: e.target.value })}
-              />
+              <div className="relative">
+                <Input
+                  id="signup-password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={signup.password}
+                  onChange={(e) => setSignup({ ...signup, password: e.target.value })}
+                  className="pr-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-confirm-password">Confirm password</Label>
+              <div className="relative">
+                <Input
+                  id="signup-confirm-password"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={signup.confirmPassword}
+                  onChange={(e) => setSignup({ ...signup, confirmPassword: e.target.value })}
+                  className="pr-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -204,20 +248,37 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
               </div>
             </div>
             {signup.role === 'user' && (
-              <div className="space-y-1.5">
-                <Label htmlFor="signup-bg">Blood group</Label>
-                <Select
-                  id="signup-bg"
-                  value={signup.bloodGroup}
-                  onChange={(e) => setSignup({ ...signup, bloodGroup: e.target.value })}
-                >
-                  {BLOOD_GROUPS.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="signup-bg">Blood group</Label>
+                  <Select
+                    id="signup-bg"
+                    value={signup.bloodGroup}
+                    onChange={(e) => setSignup({ ...signup, bloodGroup: e.target.value })}
+                  >
+                    {BLOOD_GROUPS.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    id="signup-donor-enrolled"
+                    type="checkbox"
+                    checked={signup.donorEnrolled}
+                    onChange={(e) => setSignup({ ...signup, donorEnrolled: e.target.checked })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-brand-600"
+                  />
+                  <span className="text-sm text-slate-700">
+                    Register as a blood donor
+                    <span className="block text-xs text-slate-400">
+                      You can change this at any time from your dashboard.
+                    </span>
+                  </span>
+                </label>
+              </>
             )}
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}

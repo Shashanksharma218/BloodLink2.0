@@ -2,17 +2,23 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Hospital = require('../models/Hospital');
 const { generateToken, cookieOptions } = require('../utils/generateToken');
+const { computeEffectiveStatus, daysUntilAvailable, availableOnDate } = require('../utils/donorStatus');
 
 const sanitize = (doc, role) => {
   const obj = doc.toObject();
   delete obj.password;
   obj.role = role;
+  if (role === 'user') {
+    obj.effectiveStatus = computeEffectiveStatus(obj);
+    obj.daysUntilAvailable = daysUntilAvailable(obj);
+    obj.availableOn = availableOnDate(obj);
+  }
   return obj;
 };
 
 const register = async (req, res) => {
   try {
-    const { role, name, email, password, phone, pincode, bloodGroup, address } = req.body;
+    const { role, name, email, password, phone, pincode, bloodGroup, address, donorEnrolled } = req.body;
 
     if (!role || !['user', 'hospital'].includes(role)) {
       return res.status(400).json({ message: 'Valid role is required (user or hospital)' });
@@ -36,7 +42,10 @@ const register = async (req, res) => {
     const payload =
       role === 'hospital'
         ? { name, email, password: hashed, phone, pincode, address }
-        : { name, email, password: hashed, phone, pincode, bloodGroup };
+        : {
+            name, email, password: hashed, phone, pincode, bloodGroup,
+            ...(typeof donorEnrolled === 'boolean' && { donorEnrolled }),
+          };
 
     const account = await Model.create(payload);
 

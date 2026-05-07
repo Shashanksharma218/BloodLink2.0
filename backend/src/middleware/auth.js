@@ -27,4 +27,11 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const userOnly = (req, res, next) => {
+  if (req.role !== 'user') {
+    return res.status(403).json({ message: 'Access denied: users only' });
+  }
+  next();
+};
+
+module.exports = { protect, userOnly };
