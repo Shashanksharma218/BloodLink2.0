@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-const AVAILABILITY_PREFERENCE = ['AVAILABLE', 'UNAVAILABLE'];
+const { BLOOD_GROUPS } = require('../config/bloodCompatibility');
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,6 +7,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Name is required'],
       trim: true,
+      maxlength: 100,
     },
     email: {
       type: String,
@@ -24,43 +23,47 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
+      required: [true, 'Phone is required'],
       trim: true,
+    },
+    roles: {
+      type: [String],
+      enum: ['donor', 'seeker', 'admin'],
+      default: ['donor', 'seeker'],
     },
     bloodGroup: {
       type: String,
-      required: [true, 'Blood group is required'],
       enum: BLOOD_GROUPS,
     },
     pincode: {
       type: String,
       required: [true, 'Pincode is required'],
       trim: true,
+      match: [/^\d{6}$/, 'Pincode must be 6 digits'],
     },
-    // Whether the user has opted into the donor programme at all.
+    location: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number], default: undefined },
+    },
     donorEnrolled: {
       type: Boolean,
       default: true,
     },
-    // User-controlled intent; RECOVERING is derived, not stored.
     availabilityPreference: {
       type: String,
-      enum: AVAILABILITY_PREFERENCE,
+      enum: ['AVAILABLE', 'UNAVAILABLE'],
       default: 'AVAILABLE',
     },
-    // Optional reason when user manually sets preference to UNAVAILABLE.
     manualUnavailableReason: {
       type: String,
       trim: true,
+      maxlength: 200,
     },
-    // Cached from the donations collection (MAX donatedAt where verified=true).
-    // Updated atomically when a donation is marked COMPLETED.
     lastDonationDate: {
       type: Date,
       default: null,
       validate: {
-        validator(v) {
-          return v === null || v <= new Date();
-        },
+        validator(v) { return v === null || v <= new Date(); },
         message: 'lastDonationDate cannot be in the future',
       },
     },
@@ -69,15 +72,21 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    verifiedDonor: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-// Donor-matching query shape: WHERE availabilityPreference = 'AVAILABLE'
-// AND (lastDonationDate IS NULL OR lastDonationDate < now - 56d)
-// Composite index covers both predicates.
-userSchema.index({ availabilityPreference: 1, lastDonationDate: 1 });
+userSchema.index({ availabilityPreference: 1, lastDonationDate: 1, bloodGroup: 1 });
 userSchema.index({ pincode: 1 });
-userSchema.index({ bloodGroup: 1 });
+userSchema.index({ roles: 1 });
+userSchema.index({ location: '2dsphere' }, { sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

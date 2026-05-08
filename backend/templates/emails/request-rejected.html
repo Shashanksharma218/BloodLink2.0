@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><style>
+  body { font-family: Arial, sans-serif; color: #2C3E50; }
+  .header { background: #C0392B; color: white; padding: 20px; }
+  .body { padding: 24px; }
+  .footer { padding: 16px 24px; color: #95A5A6; font-size: 12px; border-top: 1px solid #eee; }
+</style></head>
+<body>
+  <div class="header"><h2>BloodLink — Request Update</h2></div>
+  <div class="body">
+    <p>Hello {{seekerName}},</p>
+    <p>Unfortunately, your blood request for <strong>{{patientName}}</strong> could not be verified by the hospital.</p>
+    <p><strong>Reason:</strong> {{reason}}</p>
+    <p>You may submit a new request with updated information. If you believe this is an error, please contact the hospital directly.</p>
+  </div>
+  <div class="footer">BloodLink — Connecting donors with those in need.</div>
+</body>
+</html>

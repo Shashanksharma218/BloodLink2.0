@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><style>
+  body { font-family: Arial, sans-serif; color: #2C3E50; }
+  .header { background: #C0392B; color: white; padding: 20px; }
+  .body { padding: 24px; }
+  .badge { display:inline-block; background:#E74C3C; color:white; padding:4px 10px; border-radius:4px; font-size:12px; }
+  .footer { padding: 16px 24px; color: #95A5A6; font-size: 12px; border-top: 1px solid #eee; }
+</style></head>
+<body>
+  <div class="header"><h2>BloodLink — Request Verified</h2></div>
+  <div class="body">
+    <p>Hello {{seekerName}},</p>
+    <p>Your blood request for patient <strong>{{patientName}}</strong> has been <strong>verified</strong> by the hospital.</p>
+    <p>Blood Group: <strong>{{bloodGroup}}</strong> &nbsp; Urgency: <span class="badge">{{urgency}}</span></p>
+    <p>Matching donors are now being notified. You will receive another update when a donor accepts.</p>
+    <p>Log in to <a href="{{dashboardUrl}}">your dashboard</a> to track the status.</p>
+  </div>
+  <div class="footer">BloodLink — Connecting donors with those in need.</div>
+</body>
+</html>
