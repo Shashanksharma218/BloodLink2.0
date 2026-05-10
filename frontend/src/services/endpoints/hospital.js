@@ -1,0 +1,14 @@
+import api from '@/services/api'
+
+export const searchHospitals = (params) => api.get('/hospitals', { params })
+export const getHospitalProfile = () => api.get('/hospital/profile')
+export const updateHospitalProfile = (data) => api.patch('/hospital/profile', data)
+export const getHospitalRequests = (params) => api.get('/hospital/requests', { params })
+export const verifyRequest = (id) => api.patch(`/hospital/requests/${id}/verify`)
+export const rejectRequest = (id, body) => api.patch(`/hospital/requests/${id}/reject`, body)
+export const getRequestPledges = (id) => api.get(`/hospital/requests/${id}/pledges`)
+export const markNoShow = (pledgeId, body) => api.patch(`/hospital/pledges/${pledgeId}/no-show`, body)
+export const getHospitalDonations = (params) => api.get('/hospital/donations', { params })
+export const recordDonation = (body) => api.post('/hospital/donations', body)
+export const verifyDonation = (id) => api.patch(`/hospital/donations/${id}/verify`)
+export const rejectDonation = (id, body) => api.patch(`/hospital/donations/${id}/reject`, body)

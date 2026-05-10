@@ -1,14 +1,22 @@
 const mongoose = require('mongoose');
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-const REQUEST_STATUS = ['PENDING', 'APPROVED', 'REJECTED', 'COMPLETED'];
+const REQUEST_STATUS = [
+  'PENDING_VERIFICATION',
+  'VERIFIED',
+  'PARTIALLY_FULFILLED',
+  'FULFILLED',
+  'REJECTED',
+  'EXPIRED',
+  'CANCELLED',
+];
 
 const requestSchema = new mongoose.Schema(
   {
-    patientName: {
-      type: String,
-      required: [true, 'Patient name is required'],
-      trim: true,
+    patient: {
+      name: { type: String, required: [true, 'Patient name is required'], trim: true },
+      age: { type: Number, min: 0, max: 130 },
+      gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     },
     bloodGroup: {
       type: String,
@@ -19,6 +27,11 @@ const requestSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'Units required is required'],
       min: 1,
+    },
+    unitsFulfilled: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     hospital: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,12 +47,32 @@ const requestSchema = new mongoose.Schema(
       required: [true, 'Pincode is required'],
       trim: true,
     },
+    urgency: {
+      type: String,
+      enum: ['CRITICAL', 'HIGH', 'NORMAL'],
+      default: 'NORMAL',
+    },
+    requiredBy: {
+      type: Date,
+    },
     status: {
       type: String,
       enum: REQUEST_STATUS,
-      default: 'PENDING',
+      default: 'PENDING_VERIFICATION',
+    },
+    patientContact: {
+      name: { type: String, trim: true },
+      phone: { type: String, trim: true },
+      relationship: { type: String, trim: true },
+    },
+    notes: {
+      type: String,
+      trim: true,
     },
     proofDocument: {
+      type: String,
+    },
+    rejectionReason: {
       type: String,
     },
     donors: [
@@ -52,8 +85,9 @@ const requestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Indexes to speed up donor-matching queries (by location and blood group).
 requestSchema.index({ pincode: 1 });
 requestSchema.index({ bloodGroup: 1 });
+requestSchema.index({ status: 1 });
+requestSchema.index({ requester: 1 });
 
 module.exports = mongoose.model('Request', requestSchema);

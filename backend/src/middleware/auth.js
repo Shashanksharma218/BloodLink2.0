@@ -34,4 +34,23 @@ const userOnly = (req, res, next) => {
   next();
 };
 
-module.exports = { protect, userOnly };
+const hospitalOnly = (req, res, next) => {
+  if (req.role !== 'hospital') {
+    return res.status(403).json({ message: 'Access denied: hospitals only' });
+  }
+  next();
+};
+
+// Soft email-verification gate. `protect` must run first.
+// Returns 403 with a stable code so the frontend can prompt to verify.
+const requireVerifiedEmail = (req, res, next) => {
+  if (!req.user?.emailVerified) {
+    return res.status(403).json({
+      message: 'Please verify your email address before continuing.',
+      code: 'EMAIL_NOT_VERIFIED',
+    });
+  }
+  next();
+};
+
+module.exports = { protect, userOnly, hospitalOnly, requireVerifiedEmail };

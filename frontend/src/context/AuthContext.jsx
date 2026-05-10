@@ -1,18 +1,22 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { authApi, donorApi } from '@/services/api'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import * as authEndpoints from '@/services/endpoints/auth'
 
 const AuthContext = createContext(null)
 
+const MODE_KEY = 'bloodlink:mode'
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [account, setAccount] = useState(null)
   const [loading, setLoading] = useState(true)
+  // 'donor' | 'seeker' — only meaningful for users with both roles
+  const [mode, setModeState] = useState(() => localStorage.getItem(MODE_KEY) || 'donor')
 
   const refresh = useCallback(async () => {
     try {
-      const { user } = await authApi.me()
-      setUser(user)
+      const data = await authEndpoints.me()
+      setAccount(data.user)
     } catch {
-      setUser(null)
+      setAccount(null)
     } finally {
       setLoading(false)
     }
@@ -22,40 +26,60 @@ export function AuthProvider({ children }) {
     refresh()
   }, [refresh])
 
+  // Listen for 401 broadcasts from the axios interceptor
+  useEffect(() => {
+    const handler = () => {
+      setAccount(null)
+      setLoading(false)
+    }
+    window.addEventListener('auth:logout', handler)
+    return () => window.removeEventListener('auth:logout', handler)
+  }, [])
+
   const login = async (payload) => {
-    const { user } = await authApi.login(payload)
-    setUser(user)
-    return user
+    const data = await authEndpoints.login(payload)
+    setAccount(data.user)
+    return data.user
   }
 
   const register = async (payload) => {
-    const { user } = await authApi.register(payload)
-    setUser(user)
-    return user
+    const data = await authEndpoints.register(payload)
+    setAccount(data.user)
+    return data.user
   }
 
   const logout = async () => {
-    await authApi.logout()
-    setUser(null)
+    try { await authEndpoints.logout() } catch { /* ignore */ }
+    setAccount(null)
   }
 
-  // Toggles donor availability preference and patches the user in context
-  // without a full /me round-trip. The API response carries all derived fields.
-  const updateAvailability = async (preference, reason) => {
-    const data = await donorApi.setAvailability(preference, reason)
-    setUser((prev) => ({
-      ...prev,
-      availabilityPreference: data.availabilityPreference,
-      manualUnavailableReason: data.manualUnavailableReason,
-      effectiveStatus: data.effectiveStatus,
-      daysUntilAvailable: data.daysUntilAvailable,
-      availableOn: data.availableOn,
-    }))
-    return data
+  const setMode = (m) => {
+    localStorage.setItem(MODE_KEY, m)
+    setModeState(m)
   }
+
+  const isDonor = account?.role === 'user'
+  const isSeeker = account?.role === 'user'
+  const isHospital = account?.role === 'hospital'
+  const isAdmin = account?.role === 'admin'
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, updateAvailability }}>
+    <AuthContext.Provider
+      value={{
+        account,
+        loading,
+        mode,
+        setMode,
+        isDonor,
+        isSeeker,
+        isHospital,
+        isAdmin,
+        login,
+        register,
+        logout,
+        refresh,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

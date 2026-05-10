@@ -1,0 +1,16 @@
+{
+  "name": "bloodlink",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BloodLink monorepo runner — backend + email-service + frontend",
+  "scripts": {
+    "dev": "concurrently -n backend,email,frontend -c blue,magenta,green \"npm:dev:backend\" \"npm:dev:email\" \"npm:dev:frontend\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:email": "npm --prefix email-service run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix email-service install && npm --prefix frontend install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

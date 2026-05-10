@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -13,275 +16,220 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { useAuth } from '@/context/AuthContext'
+import { BLOOD_GROUPS } from '@/lib/enums'
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+const loginSchema = z.object({
+  accountType: z.enum(['user', 'hospital']),
+  email: z.string().email(),
+  password: z.string().min(6),
+})
 
-const emptySignup = {
-  name: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  role: 'user',
-  bloodGroup: 'O+',
-  pincode: '',
-  phone: '',
-  donorEnrolled: true,
-}
+const userRegisterSchema = z.object({
+  accountType: z.literal('user'),
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(8),
+  confirm: z.string(),
+  phone: z.string().min(10).max(15),
+  pincode: z.string().length(6),
+  bloodGroup: z.enum(BLOOD_GROUPS),
+  donorEnrolled: z.boolean().default(true),
+}).refine((d) => d.password === d.confirm, { message: 'Passwords do not match', path: ['confirm'] })
 
-const emptyLogin = { email: '', password: '', role: 'user' }
+const hospitalRegisterSchema = z.object({
+  accountType: z.literal('hospital'),
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(8),
+  confirm: z.string(),
+  phone: z.string().min(10).max(15),
+  pincode: z.string().length(6),
+  address: z.string().min(5),
+  licenseNumber: z.string().min(3),
+}).refine((d) => d.password === d.confirm, { message: 'Passwords do not match', path: ['confirm'] })
 
 export default function AuthModal({ open, onOpenChange, initialMode = 'login' }) {
   const [mode, setMode] = useState(initialMode)
-  const [signup, setSignup] = useState(emptySignup)
-  const [login, setLogin] = useState(emptyLogin)
-  const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showPw, setShowPw] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [accountType, setAccountType] = useState('user')
 
   const { login: doLogin, register: doRegister } = useAuth()
   const navigate = useNavigate()
 
+  const loginForm = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { accountType: 'user', email: '', password: '' },
+  })
+
+  const registerForm = useForm({
+    resolver: zodResolver(accountType === 'hospital' ? hospitalRegisterSchema : userRegisterSchema),
+    defaultValues: { accountType: 'user', name: '', email: '', password: '', confirm: '', phone: '', pincode: '', bloodGroup: 'O+', donorEnrolled: true, address: '', licenseNumber: '' },
+  })
+
   useEffect(() => {
     if (open) {
       setMode(initialMode)
-      setError('')
-      setShowPassword(false)
-      setShowConfirmPassword(false)
+      setShowPw(false)
+      setShowConfirm(false)
+      loginForm.reset()
+      registerForm.reset()
     }
   }, [open, initialMode])
 
-  const handleSignup = async (e) => {
-    e.preventDefault()
-    setError('')
-    if (signup.password !== signup.confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-    setSubmitting(true)
+  const handleLogin = async (data) => {
+    const { accountType, ...rest } = data
     try {
-      const payload = { ...signup }
-      delete payload.confirmPassword
-      if (payload.role === 'hospital') delete payload.bloodGroup
-      await doRegister(payload)
+      await doLogin({ ...rest, role: accountType })
       onOpenChange(false)
-      setSignup(emptySignup)
       navigate('/dashboard')
     } catch (err) {
-      setError(err?.response?.data?.message || 'Signup failed')
-    } finally {
-      setSubmitting(false)
+      loginForm.setError('password', { message: err.message || 'Invalid credentials' })
     }
   }
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setError('')
-    setSubmitting(true)
+  const handleRegister = async (data) => {
+    const { confirm, accountType, ...rest } = data
+    const payload = { ...rest, role: accountType }
     try {
-      await doLogin(login)
+      await doRegister(payload)
       onOpenChange(false)
-      setLogin(emptyLogin)
       navigate('/dashboard')
     } catch (err) {
-      setError(err?.response?.data?.message || 'Login failed')
-    } finally {
-      setSubmitting(false)
+      registerForm.setError('root', { message: err.message || 'Registration failed' })
     }
+  }
+
+  const onTypeChange = (val) => {
+    setAccountType(val)
+    registerForm.setValue('accountType', val)
+    loginForm.setValue('accountType', val)
   }
 
   const isLogin = mode === 'login'
+  const isHospital = accountType === 'hospital'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isLogin ? 'Welcome back' : 'Create your account'}</DialogTitle>
           <DialogDescription>
-            {isLogin
-              ? 'Log in to manage donations and requests.'
-              : 'Join BloodLink as a donor or hospital.'}
+            {isLogin ? 'Log in to manage donations and requests.' : 'Join BloodLink as a donor or hospital.'}
           </DialogDescription>
         </DialogHeader>
 
-        {error && (
-          <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        {/* Account type switcher */}
+        <div className="flex gap-2 mb-1">
+          {(['user', 'hospital'] ).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => onTypeChange(t)}
+              className={`flex-1 rounded-lg border py-2 text-sm font-medium transition-colors ${
+                accountType === t
+                  ? 'border-brand-600 bg-brand-50 text-brand-700'
+                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {t === 'user' ? 'Donor / User' : 'Hospital'}
+            </button>
+          ))}
+        </div>
 
         {isLogin ? (
-          <form onSubmit={handleLogin} className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="login-role">I am a</Label>
-              <Select
-                id="login-role"
-                value={login.role}
-                onChange={(e) => setLogin({ ...login, role: e.target.value })}
-              >
-                <option value="user">Donor / User</option>
-                <option value="hospital">Hospital</option>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="login-email">Email</Label>
-              <Input
-                id="login-email"
-                type="email"
-                required
-                value={login.email}
-                onChange={(e) => setLogin({ ...login, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="login-password">Password</Label>
-              <Input
-                id="login-password"
-                type="password"
-                required
-                minLength={6}
-                value={login.password}
-                onChange={(e) => setLogin({ ...login, password: e.target.value })}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+          <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-3">
+            <Field label="Email" error={loginForm.formState.errors.email?.message}>
+              <Input {...loginForm.register('email')} type="email" autoComplete="email" />
+            </Field>
+            <Field label="Password" error={loginForm.formState.errors.password?.message}>
+              <div className="relative">
+                <Input {...loginForm.register('password')} type={showPw ? 'text' : 'password'} className="pr-9" autoComplete="current-password" />
+                <PwToggle show={showPw} onToggle={() => setShowPw((v) => !v)} />
+              </div>
+            </Field>
+            <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+              {loginForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Log in
             </Button>
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                onClick={() => onOpenChange(false)}
+                className="text-xs font-medium text-brand-600 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </form>
         ) : (
-          <form onSubmit={handleSignup} className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="signup-role">I am a</Label>
-              <Select
-                id="signup-role"
-                value={signup.role}
-                onChange={(e) => setSignup({ ...signup, role: e.target.value })}
-              >
-                <option value="user">Donor / User</option>
-                <option value="hospital">Hospital</option>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="signup-name">
-                {signup.role === 'hospital' ? 'Hospital name' : 'Full name'}
-              </Label>
-              <Input
-                id="signup-name"
-                required
-                value={signup.name}
-                onChange={(e) => setSignup({ ...signup, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="signup-email">Email</Label>
-              <Input
-                id="signup-email"
-                type="email"
-                required
-                value={signup.email}
-                onChange={(e) => setSignup({ ...signup, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="signup-password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="signup-password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  value={signup.password}
-                  onChange={(e) => setSignup({ ...signup, password: e.target.value })}
-                  className="pr-9"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+          <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-3">
+            {registerForm.formState.errors.root && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {registerForm.formState.errors.root.message}
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="signup-confirm-password">Confirm password</Label>
+            )}
+
+            <Field label={isHospital ? 'Hospital name' : 'Full name'} error={registerForm.formState.errors.name?.message}>
+              <Input {...registerForm.register('name')} />
+            </Field>
+            <Field label="Email" error={registerForm.formState.errors.email?.message}>
+              <Input {...registerForm.register('email')} type="email" autoComplete="email" />
+            </Field>
+            <Field label="Password" error={registerForm.formState.errors.password?.message}>
               <div className="relative">
-                <Input
-                  id="signup-confirm-password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  value={signup.confirmPassword}
-                  onChange={(e) => setSignup({ ...signup, confirmPassword: e.target.value })}
-                  className="pr-9"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                <Input {...registerForm.register('password')} type={showPw ? 'text' : 'password'} className="pr-9" autoComplete="new-password" />
+                <PwToggle show={showPw} onToggle={() => setShowPw((v) => !v)} />
               </div>
-            </div>
+            </Field>
+            <Field label="Confirm password" error={registerForm.formState.errors.confirm?.message}>
+              <div className="relative">
+                <Input {...registerForm.register('confirm')} type={showConfirm ? 'text' : 'password'} className="pr-9" />
+                <PwToggle show={showConfirm} onToggle={() => setShowConfirm((v) => !v)} />
+              </div>
+            </Field>
+
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="signup-pincode">Pincode</Label>
-                <Input
-                  id="signup-pincode"
-                  required
-                  value={signup.pincode}
-                  onChange={(e) => setSignup({ ...signup, pincode: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="signup-phone">Phone</Label>
-                <Input
-                  id="signup-phone"
-                  type="tel"
-                  value={signup.phone}
-                  onChange={(e) => setSignup({ ...signup, phone: e.target.value })}
-                />
-              </div>
+              <Field label="Phone" error={registerForm.formState.errors.phone?.message}>
+                <Input {...registerForm.register('phone')} type="tel" />
+              </Field>
+              <Field label="Pincode" error={registerForm.formState.errors.pincode?.message}>
+                <Input {...registerForm.register('pincode')} maxLength={6} />
+              </Field>
             </div>
-            {signup.role === 'user' && (
+
+            {isHospital ? (
               <>
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-bg">Blood group</Label>
-                  <Select
-                    id="signup-bg"
-                    value={signup.bloodGroup}
-                    onChange={(e) => setSignup({ ...signup, bloodGroup: e.target.value })}
-                  >
-                    {BLOOD_GROUPS.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
+                <Field label="Address" error={registerForm.formState.errors.address?.message}>
+                  <Input {...registerForm.register('address')} />
+                </Field>
+                <Field label="License number" error={registerForm.formState.errors.licenseNumber?.message}>
+                  <Input {...registerForm.register('licenseNumber')} />
+                </Field>
+              </>
+            ) : (
+              <>
+                <Field label="Blood group" error={registerForm.formState.errors.bloodGroup?.message}>
+                  <Select {...registerForm.register('bloodGroup')}>
+                    {BLOOD_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
                   </Select>
-                </div>
+                </Field>
                 <label className="flex items-start gap-2.5 cursor-pointer select-none">
                   <input
-                    id="signup-donor-enrolled"
                     type="checkbox"
-                    checked={signup.donorEnrolled}
-                    onChange={(e) => setSignup({ ...signup, donorEnrolled: e.target.checked })}
+                    {...registerForm.register('donorEnrolled')}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-brand-600"
                   />
                   <span className="text-sm text-slate-700">
                     Register as a blood donor
-                    <span className="block text-xs text-slate-400">
-                      You can change this at any time from your dashboard.
-                    </span>
+                    <span className="block text-xs text-slate-400">You can change this anytime.</span>
                   </span>
                 </label>
               </>
             )}
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+
+            <Button type="submit" className="w-full" disabled={registerForm.formState.isSubmitting}>
+              {registerForm.formState.isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Create account
             </Button>
           </form>
@@ -292,15 +240,35 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
           <button
             type="button"
             className="font-medium text-brand-600 hover:underline"
-            onClick={() => {
-              setError('')
-              setMode(isLogin ? 'signup' : 'login')
-            }}
+            onClick={() => setMode(isLogin ? 'signup' : 'login')}
           >
             {isLogin ? 'Sign up' : 'Log in'}
           </button>
         </p>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function Field({ label, children, error }) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      {children}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
+  )
+}
+
+function PwToggle({ show, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600"
+      tabIndex={-1}
+    >
+      {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </button>
   )
 }

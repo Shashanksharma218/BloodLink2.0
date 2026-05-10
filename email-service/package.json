@@ -1,0 +1,17 @@
+{
+  "name": "email-service",
+  "version": "1.0.0",
+  "description": "BloodLink transactional email + certificate microservice",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nodemailer": "^7.0.10",
+    "pdfkit": "^0.18.0"
+  }
+}

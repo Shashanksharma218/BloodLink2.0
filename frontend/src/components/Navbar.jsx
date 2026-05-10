@@ -7,11 +7,11 @@ import { useAuth } from '@/context/AuthContext'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState('login')
-  const { user, logout } = useAuth()
+  const [authMode, setAuthMode] = useState('login')
+  const { account } = useAuth()
 
   const openAuth = (m) => {
-    setMode(m)
+    setAuthMode(m)
     setOpen(true)
   }
 
@@ -26,15 +26,10 @@ export default function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-2">
-          {user ? (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/dashboard">Dashboard</Link>
-              </Button>
-              <Button variant="outline" size="sm" onClick={logout}>
-                Logout
-              </Button>
-            </>
+          {account ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/dashboard">Dashboard</Link>
+            </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => openAuth('login')}>
@@ -48,7 +43,7 @@ export default function Navbar() {
         </nav>
       </div>
 
-      <AuthModal open={open} onOpenChange={setOpen} initialMode={mode} />
+      <AuthModal open={open} onOpenChange={setOpen} initialMode={authMode} />
     </header>
   )
 }

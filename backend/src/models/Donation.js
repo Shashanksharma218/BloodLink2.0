@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
-const DONATION_STATUS = ['PENDING', 'CONFIRMED', 'COMPLETED'];
+const PLEDGE_STATUS = ['ACCEPTED', 'FULFILLED', 'CANCELLED', 'NO_SHOW', 'VOID'];
 const DONATION_TYPES = ['WHOLE_BLOOD', 'PLASMA', 'PLATELETS'];
+const DONATION_STATES = ['RECORDED', 'VERIFIED', 'REJECTED'];
 
 const donationSchema = new mongoose.Schema(
   {
@@ -13,7 +14,6 @@ const donationSchema = new mongoose.Schema(
     request: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Request',
-      required: [true, 'Request is required'],
     },
     hospital: {
       type: mongoose.Schema.Types.ObjectId,
@@ -22,38 +22,38 @@ const donationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: DONATION_STATUS,
-      default: 'PENDING',
+      enum: PLEDGE_STATUS,
+      default: 'ACCEPTED',
+    },
+    // Hospital-side verification state; only set on recorded donations, not pledges.
+    state: {
+      type: String,
+      enum: DONATION_STATES,
     },
     donationType: {
       type: String,
       enum: DONATION_TYPES,
       default: 'WHOLE_BLOOD',
     },
-    // When the donation physically occurred. Defaults to creation time but
-    // can be set to an earlier value for offline/retrospective entries.
+    units: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
     donatedAt: {
       type: Date,
       default: Date.now,
-      validate: {
-        validator(v) {
-          const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
-          return v <= new Date() && v >= new Date(Date.now() - ONE_YEAR_MS);
-        },
-        message: 'donatedAt must be within the past year and not in the future',
-      },
     },
-    // True once a hospital admin confirms the donation took place.
-    // Only verified donations update lastDonationDate on the User.
-    verified: {
-      type: Boolean,
-      default: false,
+    cancelReason: {
+      type: String,
     },
-    verifiedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hospital',
+    notes: {
+      type: String,
     },
     certificateUrl: {
+      type: String,
+    },
+    verificationId: {
       type: String,
     },
   },
@@ -61,5 +61,6 @@ const donationSchema = new mongoose.Schema(
 );
 
 donationSchema.index({ donor: 1, donatedAt: -1 });
+donationSchema.index({ request: 1 });
 
 module.exports = mongoose.model('Donation', donationSchema);
