@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, XCircle, Droplet, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,9 +13,11 @@ export default function VerifyEmail() {
   const [state, setState] = useState('loading') // loading | ok | error
   const [errorMsg, setErrorMsg] = useState('')
   const { refresh, account } = useAuth()
+  const called = useRef(false)
 
   useEffect(() => {
-    let cancelled = false
+    if (called.current) return
+    called.current = true
 
     async function run() {
       if (!token || !role) {
@@ -25,18 +27,15 @@ export default function VerifyEmail() {
       }
       try {
         await verifyEmail({ token, role })
-        if (cancelled) return
         if (account) await refresh()
         setState('ok')
       } catch (err) {
-        if (cancelled) return
         setErrorMsg(err.message || 'Verification failed')
         setState('error')
       }
     }
 
     run()
-    return () => { cancelled = true }
   }, [token, role])
 
   return (
