@@ -10,7 +10,7 @@ import { LoadingState, TableSkeleton } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Pagination } from '@/components/ui/pagination'
 import { getDonations } from '@/services/endpoints/donor'
-import { Droplet } from 'lucide-react'
+import { BloodDropIcon } from '@/components/shared/BloodDropIcon'
 
 export default function DonorDonations() {
   const [page, setPage] = useState(1)
@@ -34,7 +34,7 @@ export default function DonorDonations() {
 
         {!isLoading && !isError && donations.length === 0 && (
           <EmptyState
-            icon={Droplet}
+            icon={BloodDropIcon}
             title="No donations yet"
             description="Once you donate, your history will appear here."
           />

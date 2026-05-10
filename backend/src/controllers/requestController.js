@@ -1,8 +1,12 @@
 const Request = require('../models/Request');
 const Donation = require('../models/Donation');
 const Hospital = require('../models/Hospital');
+const { computeEffectiveStatus } = require('../utils/donorStatus');
 
 const ACTIVE_STATUSES = ['PENDING_VERIFICATION', 'VERIFIED', 'PARTIALLY_FULFILLED'];
+// Excludes PENDING_VERIFICATION so donors can't see or pledge to a request
+// before a hospital admin has verified it.
+const DONOR_VISIBLE_STATUSES = ['VERIFIED', 'PARTIALLY_FULFILLED'];
 
 const getDonorFeed = async (req, res) => {
   try {
@@ -10,8 +14,19 @@ const getDonorFeed = async (req, res) => {
     const { limit = 20, page = 1 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
+    const donorStatus = computeEffectiveStatus(donor);
+    if (donorStatus === 'RECOVERING' || donorStatus === 'INELIGIBLE') {
+      return res.json({
+        requests: [],
+        total: 0,
+        page: Number(page),
+        limit: Number(limit),
+        donorStatus,
+      });
+    }
+
     const filter = {
-      status: { $in: ACTIVE_STATUSES },
+      status: { $in: DONOR_VISIBLE_STATUSES },
       bloodGroup: donor.bloodGroup,
       donors: { $ne: donor._id },
     };
@@ -139,7 +154,7 @@ const getRequestPledges = async (req, res) => {
     if (!request) return res.status(404).json({ message: 'Request not found' });
 
     const pledges = await Donation.find({ request: req.params.id, status: 'ACCEPTED' })
-      .populate('donor', 'name bloodGroup pincode');
+      .populate('donor', 'name email phone bloodGroup pincode');
 
     return res.json({ pledges });
   } catch (err) {
@@ -154,8 +169,16 @@ const acceptPledge = async (req, res) => {
     const request = await Request.findById(req.params.id);
 
     if (!request) return res.status(404).json({ message: 'Request not found' });
-    if (!ACTIVE_STATUSES.includes(request.status)) {
+    if (!DONOR_VISIBLE_STATUSES.includes(request.status)) {
       return res.status(400).json({ message: 'Request is not accepting pledges' });
+    }
+
+    const donorStatus = computeEffectiveStatus(donor);
+    if (donorStatus === 'RECOVERING' || donorStatus === 'INELIGIBLE') {
+      return res.status(403).json({
+        message: 'You are not currently eligible to pledge',
+        status: donorStatus,
+      });
     }
 
     const alreadyPledged = request.donors.some((d) => d.toString() === donor._id.toString());

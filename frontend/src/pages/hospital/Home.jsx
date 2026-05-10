@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ClipboardList, CheckSquare, Droplet, Clock } from 'lucide-react'
+import { ClipboardList, CheckSquare, Clock } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingState } from '@/components/shared/LoadingState'
@@ -63,7 +63,7 @@ export default function HospitalHome() {
           </Link>
           <Link to="/hospital/donations">
             <StatCard
-              icon={<Droplet className="h-5 w-5 text-emerald-500" />}
+              icon={<img src="/blood-drop.png" alt="" className="h-5 w-5 object-contain" />}
               label="Total Donations"
               value={donationCount}
               bg="bg-emerald-50"

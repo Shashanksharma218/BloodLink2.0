@@ -1,0 +1,54 @@
+- generic:
+  - generic:
+    - region "Notifications alt+T"
+    - generic:
+      - banner:
+        - generic:
+          - link:
+            - /url: /
+            - img
+            - generic: BloodLink
+          - navigation:
+            - button: Login
+            - button: Sign up
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - img
+              - text: Every drop counts
+            - heading [level=1]: Donate Blood. Save Lives.
+            - paragraph: BloodLink connects donors and hospitals so the right blood reaches the right person — fast, verified, and right around the corner.
+            - generic:
+              - button:
+                - img
+                - text: Become a Donor
+              - button:
+                - img
+                - text: Request Blood
+  - dialog "Welcome back" [ref=e241]:
+    - generic [ref=e242]:
+      - heading "Welcome back" [level=2] [ref=e243]
+      - paragraph [ref=e244]: Log in to manage donations and requests.
+    - generic [ref=e245]:
+      - button "Donor / User" [active] [ref=e246]
+      - button "Hospital" [ref=e247]
+    - generic [ref=e248]:
+      - generic [ref=e249]:
+        - text: Email
+        - textbox [ref=e250]
+      - generic [ref=e251]:
+        - text: Password
+        - generic [ref=e252]:
+          - textbox [ref=e253]
+          - button [ref=e254]:
+            - img [ref=e255]
+      - button "Log in" [ref=e258]
+      - link "Forgot password?" [ref=e260] [cursor=pointer]:
+        - /url: /forgot-password
+    - paragraph [ref=e261]:
+      - text: Don't have an account?
+      - button "Sign up" [ref=e262]
+    - button "Close" [ref=e263]:
+      - img [ref=e264]
+      - generic [ref=e267]: Close

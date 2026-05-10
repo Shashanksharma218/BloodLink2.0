@@ -13,7 +13,9 @@ const hospitalRoutes = require('./src/routes/hospitalRoutes');
 const requestRoutes = require('./src/routes/requestRoutes');
 const pledgeRoutes = require('./src/routes/pledgeRoutes');
 const certificateRoutes = require('./src/routes/certificateRoutes');
+const eraktkoshRoutes = require('./src/routes/eraktkoshRoutes');
 const { verifyByPublicId } = require('./src/controllers/certificateController');
+const { seedEraktkoshMastersIfEmpty } = require('./scripts/seedEraktkoshMasters');
 
 const app = express();
 
@@ -32,7 +34,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(uploadsDir));
 
-connectDB();
+// Connect to Mongo, then trigger a no-op-if-already-seeded eRaktKosh seed.
+// We don't await here so server bind isn't blocked on the seed network call.
+connectDB().then(() => seedEraktkoshMastersIfEmpty());
 
 app.get('/', (req, res) => {
   res.json({ message: 'BloodLink API is running' });
@@ -46,6 +50,7 @@ app.use('/api/hospital', hospitalRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/pledges', pledgeRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/eraktkosh', eraktkoshRoutes);
 
 // Public certificate verification endpoint (no auth)
 app.get('/api/verify/:verificationId', verifyByPublicId);

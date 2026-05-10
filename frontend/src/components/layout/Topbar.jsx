@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Droplet, LogOut, KeyRound, User } from 'lucide-react'
+import { LogOut, KeyRound, User } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { RoleSwitcher } from '@/components/shared/RoleSwitcher'
 import {
@@ -23,9 +23,7 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-slate-200 bg-white px-6">
       <Link to="/" className="flex items-center gap-2 mr-4">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-white">
-          <Droplet className="h-3.5 w-3.5" fill="currentColor" />
-        </span>
+        <img src="/blood-drop.png" alt="BloodLink" className="h-7 w-7 object-contain" />
         <span className="text-base font-bold text-slate-900">BloodLink</span>
       </Link>
 

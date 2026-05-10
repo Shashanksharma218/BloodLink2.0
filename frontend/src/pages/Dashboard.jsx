@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Building2, Droplet, LogOut, Loader2, CircleDot } from 'lucide-react'
+import { Building2, LogOut, Loader2, CircleDot } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
@@ -29,11 +29,11 @@ export default function Dashboard() {
           className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
         >
           <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50">
               {isHospital ? (
                 <Building2 className="h-5 w-5" />
               ) : (
-                <Droplet className="h-5 w-5" fill="currentColor" />
+                <img src="/blood-drop.png" alt="" className="h-7 w-7 object-contain" />
               )}
             </span>
             <div>

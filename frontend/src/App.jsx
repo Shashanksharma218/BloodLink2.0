@@ -37,10 +37,14 @@ const HospitalQueue = lazy(() => import('@/pages/hospital/Queue'))
 const HospitalActive = lazy(() => import('@/pages/hospital/Active'))
 const HospitalDonations = lazy(() => import('@/pages/hospital/Donations'))
 const HospitalRecordDonation = lazy(() => import('@/pages/hospital/RecordDonation'))
+const HospitalDonors = lazy(() => import('@/pages/hospital/Donors'))
 const HospitalProfile = lazy(() => import('@/pages/hospital/Profile'))
 
 // Account
 const ChangePassword = lazy(() => import('@/pages/account/Password'))
+
+// Shared (any authenticated role)
+const Inventory = lazy(() => import('@/pages/Inventory'))
 
 function PageLoader() {
   return (
@@ -87,10 +91,14 @@ export default function App() {
             <Route path="/hospital/active" element={<ProtectedRoute requiredRole="hospital"><HospitalActive /></ProtectedRoute>} />
             <Route path="/hospital/donations" element={<ProtectedRoute requiredRole="hospital"><HospitalDonations /></ProtectedRoute>} />
             <Route path="/hospital/donations/new" element={<ProtectedRoute requiredRole="hospital"><HospitalRecordDonation /></ProtectedRoute>} />
+            <Route path="/hospital/donors" element={<ProtectedRoute requiredRole="hospital"><HospitalDonors /></ProtectedRoute>} />
             <Route path="/hospital/profile" element={<ProtectedRoute requiredRole="hospital"><HospitalProfile /></ProtectedRoute>} />
 
             {/* Account */}
             <Route path="/account/password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+
+            {/* Shared (any role) */}
+            <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
 
             {/* Errors */}
             <Route path="/forbidden" element={<Forbidden />} />

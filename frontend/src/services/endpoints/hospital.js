@@ -12,3 +12,5 @@ export const getHospitalDonations = (params) => api.get('/hospital/donations', {
 export const recordDonation = (body) => api.post('/hospital/donations', body)
 export const verifyDonation = (id) => api.patch(`/hospital/donations/${id}/verify`)
 export const rejectDonation = (id, body) => api.patch(`/hospital/donations/${id}/reject`, body)
+export const getNearbyDonors = (params) => api.get('/hospital/donors', { params })
+export const getDonorHistory = (id) => api.get(`/hospital/donors/${id}`)

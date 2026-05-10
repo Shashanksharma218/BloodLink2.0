@@ -1,0 +1,118 @@
+- generic:
+  - generic:
+    - region "Notifications alt+T"
+    - generic:
+      - banner:
+        - link:
+          - /url: /
+          - img
+          - generic: BloodLink
+        - generic:
+          - button: Donor
+          - button: Seeker
+        - button [expanded]: S
+      - generic:
+        - navigation:
+          - complementary:
+            - link:
+              - /url: /donor
+              - img
+              - text: Overview
+            - link:
+              - /url: /donor/feed
+              - img
+              - text: Matched Requests
+            - link:
+              - /url: /donor/pledges
+              - img
+              - text: My Pledges
+            - link:
+              - /url: /donor/donations
+              - text: Donations
+            - link:
+              - /url: /donor/certificates
+              - img
+              - text: Certificates
+            - link:
+              - /url: /inventory
+              - img
+              - text: Blood Inventory
+            - link:
+              - /url: /donor/profile
+              - img
+              - text: Profile
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - button:
+                  - img
+                - heading [level=1]: Request Detail
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: O+
+                    - generic: High
+                    - generic: Fulfilled
+                  - generic:
+                    - generic: 1/1 units
+                  - paragraph: Required by 10 May 2026, 2:39 PM
+              - generic:
+                - tablist:
+                  - tab [selected]: Overview
+                  - tab: Donors (0)
+                - tabpanel:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]: Patient
+                      - generic:
+                        - generic:
+                          - generic:
+                            - term: Name
+                            - definition: Rajesh Kumar
+                          - generic:
+                            - term: Age
+                            - definition: "45"
+                          - generic:
+                            - term: Gender
+                            - definition: Male
+                    - generic:
+                      - generic:
+                        - heading [level=3]: Hospital
+                      - generic:
+                        - generic:
+                          - generic:
+                            - term: Name
+                            - definition: Max Super Speciality Hospital
+                          - generic:
+                            - term: Address
+                            - definition: Max Super Speciality Hospital, NH10-Tosham Rd Connection Rd, Mahavir Colony, New Model Town Extension, New Model Town, Hisar, Haryana 125001
+                          - generic:
+                            - term: Pincode
+                            - definition: "125001"
+                    - generic:
+                      - generic:
+                        - heading [level=3]: Contact Person
+                      - generic:
+                        - generic:
+                          - generic:
+                            - term: Name
+                            - definition: Shashank Sharma
+                          - generic:
+                            - term: Relation
+                            - definition: Relative
+                          - generic:
+                            - term: Phone
+                            - definition: "9817540761"
+  - menu "S" [active] [ref=e199]:
+    - generic [ref=e200]: Shashank Sharma
+    - generic [ref=e201]: babumanu2004@gmail.com
+    - separator [ref=e202]
+    - menuitem "Change password" [ref=e203] [cursor=pointer]:
+      - img [ref=e204]
+      - text: Change password
+    - separator [ref=e207]
+    - menuitem "Log out" [ref=e208] [cursor=pointer]:
+      - img [ref=e209]
+      - text: Log out

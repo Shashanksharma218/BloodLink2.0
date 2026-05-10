@@ -12,6 +12,8 @@ const {
   recordDonation,
   verifyDonation,
   rejectDonation,
+  getNearbyDonors,
+  getDonorHistory,
 } = require('../controllers/hospitalDashboardController');
 const { protect, hospitalOnly, requireVerifiedEmail } = require('../middleware/auth');
 
@@ -39,5 +41,8 @@ router.get('/donations', getHospitalDonations);
 router.post('/donations', requireVerifiedEmail, recordDonation);
 router.patch('/donations/:id/verify', requireVerifiedEmail, verifyDonation);
 router.patch('/donations/:id/reject', rejectDonation);
+
+router.get('/donors', getNearbyDonors);
+router.get('/donors/:donorId', getDonorHistory);
 
 module.exports = router;

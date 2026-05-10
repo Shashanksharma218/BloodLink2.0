@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, XCircle, Droplet, ExternalLink } from 'lucide-react'
+import { CheckCircle2, XCircle, ExternalLink } from 'lucide-react'
 import { verifyCertificate } from '@/services/endpoints/certificate'
 import { format } from 'date-fns'
 import { Card, CardContent } from '@/components/ui/card'
@@ -29,9 +29,7 @@ export default function VerifyCertificate() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-16">
       <Link to="/" className="mb-8 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-          <Droplet className="h-4 w-4" fill="currentColor" />
-        </span>
+        <img src="/blood-drop.png" alt="BloodLink" className="h-8 w-8 object-contain" />
         <span className="text-lg font-bold text-slate-900">BloodLink</span>
       </Link>
 

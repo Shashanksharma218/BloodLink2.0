@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Phone, Lock, ArrowLeft, FileText } from 'lucide-react'
+import { Phone, Mail, Lock, ArrowLeft, FileText } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 import { AppShell } from '@/components/layout/AppShell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -217,23 +217,44 @@ function DonorPledgeCard({ pledge }) {
               <p className="text-sm font-medium text-slate-800">{pledge.donor?.name ?? 'Donor'}</p>
               <PledgeStatusBadge status={pledge.status} />
             </div>
-            {isActive && pledge.donor?.phone && (
+            {isActive && (pledge.donor?.phone || pledge.donor?.email) && (
               <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a
-                      href={`tel:${pledge.donor.phone}`}
-                      className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline"
-                    >
-                      <Lock className="h-2.5 w-2.5" />
-                      <Phone className="h-3 w-3" />
-                      {pledge.donor.phone}
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Visible because you have an active pledge
-                  </TooltipContent>
-                </Tooltip>
+                <div className="flex flex-col gap-0.5">
+                  {pledge.donor?.phone && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={`tel:${pledge.donor.phone}`}
+                          className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline"
+                        >
+                          <Lock className="h-2.5 w-2.5" />
+                          <Phone className="h-3 w-3" />
+                          {pledge.donor.phone}
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Visible because you have an active pledge
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {pledge.donor?.email && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={`mailto:${pledge.donor.email}`}
+                          className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline"
+                        >
+                          <Lock className="h-2.5 w-2.5" />
+                          <Mail className="h-3 w-3" />
+                          {pledge.donor.email}
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Visible because you have an active pledge
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </TooltipProvider>
             )}
             <p className="text-xs text-slate-400 mt-0.5">

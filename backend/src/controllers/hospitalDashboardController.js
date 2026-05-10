@@ -8,6 +8,7 @@ const User = require('../models/User');
 const Hospital = require('../models/Hospital');
 const Certificate = require('../models/Certificate');
 const emailClient = require('../services/emailClient');
+const { computeEffectiveStatus, daysUntilAvailable } = require('../utils/donorStatus');
 
 const CERT_DIR = path.join(__dirname, '..', '..', 'uploads', 'certificates');
 if (!fs.existsSync(CERT_DIR)) fs.mkdirSync(CERT_DIR, { recursive: true });
@@ -360,6 +361,79 @@ const rejectDonation = async (req, res) => {
   }
 };
 
+const DONOR_LIST_FIELDS =
+  'name email phone bloodGroup pincode lastDonationDate donationsCount donorEnrolled availabilityPreference manualUnavailableReason createdAt';
+
+const getNearbyDonors = async (req, res) => {
+  try {
+    const { bloodGroup, status, search, page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const filter = { donorEnrolled: true, pincode: req.user.pincode };
+    if (bloodGroup) filter.bloodGroup = bloodGroup;
+    if (search) {
+      const escaped = String(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const rx = new RegExp(escaped, 'i');
+      filter.$or = [{ name: rx }, { phone: rx }, { email: rx }];
+    }
+
+    const [docs, total] = await Promise.all([
+      User.find(filter)
+        .select(DONOR_LIST_FIELDS)
+        .sort({ lastDonationDate: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      User.countDocuments(filter),
+    ]);
+
+    const enriched = docs.map((d) => {
+      const obj = d.toObject();
+      return {
+        ...obj,
+        effectiveStatus: computeEffectiveStatus(obj),
+        daysUntilAvailable: daysUntilAvailable(obj),
+      };
+    });
+
+    const donors = status ? enriched.filter((d) => d.effectiveStatus === status) : enriched;
+    return res.json({ donors, meta: { total, page: Number(page), limit: Number(limit) } });
+  } catch (err) {
+    console.error('getNearbyDonors error:', err);
+    return res.status(500).json({ message: 'Failed to load donors' });
+  }
+};
+
+const getDonorHistory = async (req, res) => {
+  try {
+    // Pincode match is the authorization gate — hospitals can only inspect donors in their own area.
+    const donor = await User.findOne({
+      _id: req.params.donorId,
+      donorEnrolled: true,
+      pincode: req.user.pincode,
+    }).select(DONOR_LIST_FIELDS);
+
+    if (!donor) return res.status(404).json({ message: 'Donor not found in your area' });
+
+    const donations = await Donation.find({ donor: donor._id, state: { $exists: true } })
+      .sort({ donatedAt: -1 })
+      .populate('hospital', 'name pincode')
+      .populate('request', 'patient bloodGroup urgency');
+
+    const obj = donor.toObject();
+    return res.json({
+      donor: {
+        ...obj,
+        effectiveStatus: computeEffectiveStatus(obj),
+        daysUntilAvailable: daysUntilAvailable(obj),
+      },
+      donations,
+    });
+  } catch (err) {
+    console.error('getDonorHistory error:', err);
+    return res.status(500).json({ message: 'Failed to load donor history' });
+  }
+};
+
 module.exports = {
   getHospitalProfile,
   updateHospitalProfile,
@@ -372,4 +446,6 @@ module.exports = {
   recordDonation,
   verifyDonation,
   rejectDonation,
+  getNearbyDonors,
+  getDonorHistory,
 };
