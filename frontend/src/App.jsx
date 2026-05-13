@@ -46,6 +46,9 @@ const ChangePassword = lazy(() => import('@/pages/account/Password'))
 // Shared (any authenticated role)
 const Inventory = lazy(() => import('@/pages/Inventory'))
 
+// Public blood stock search
+const BloodStock = lazy(() => import('@/pages/public/BloodStock'))
+
 function PageLoader() {
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -99,6 +102,9 @@ export default function App() {
 
             {/* Shared (any role) */}
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+
+            {/* Public blood stock */}
+            <Route path="/blood-stock" element={<BloodStock />} />
 
             {/* Errors */}
             <Route path="/forbidden" element={<Forbidden />} />

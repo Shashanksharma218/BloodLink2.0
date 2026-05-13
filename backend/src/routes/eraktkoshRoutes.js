@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const {
   listStates,
   listDistricts,
@@ -6,12 +7,18 @@ const {
   listComponents,
   getAvailability,
 } = require('../controllers/eraktkoshController');
-const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// All eRaktKosh routes require an authenticated account (user or hospital).
-router.use(protect);
+const eraktkoshLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later.' },
+});
+
+router.use(eraktkoshLimiter);
 
 router.get('/states', listStates);
 router.get('/states/:stateCode/districts', listDistricts);

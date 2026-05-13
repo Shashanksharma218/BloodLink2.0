@@ -1,7 +1,59 @@
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
 dist/
+dist-ssr/
 build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories
 .vscode/
-.claude
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backend specific
 backend/uploads/
+backend/*.sqlite
+backend/*.db
+
+# AI / testing tooling
+.claude/
+.playwright-mcp/
+.ui-audit/
+
+# Test coverage
+coverage/
+
+# Misc
+*.local

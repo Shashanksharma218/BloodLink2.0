@@ -24,6 +24,9 @@ export default function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Link to="/blood-stock">Find Blood Stock</Link>
+          </Button>
           {account ? (
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard">Dashboard</Link>
