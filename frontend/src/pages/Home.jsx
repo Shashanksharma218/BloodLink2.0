@@ -220,8 +220,8 @@ export default function Home() {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</p>
               <div className="flex flex-col gap-1.5 text-xs text-slate-500">
                 <span>IIIT Una, Himachal Pradesh</span>
-                <a href="mailto:agarwalrishabh852@gmail.com" className="hover:text-brand-600 hover:underline">
-                  agarwalrishabh852@gmail.com
+                <a href="mailto:bloodlink.iiitu@gmail.com" className="hover:text-brand-600 hover:underline">
+                  bloodlink.iiitu@gmail.com
                 </a>
                 <span className="text-brand-600 font-medium">24/7 Emergency Support</span>
               </div>
