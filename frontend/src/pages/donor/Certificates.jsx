@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Award, Download, Loader2 } from 'lucide-react'
+import { Award, Download, Loader2, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { AppShell } from '@/components/layout/AppShell'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadingState } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Pagination } from '@/components/ui/pagination'
-import { getCertificates } from '@/services/endpoints/donor'
+import { getCertificates, getPendingCertificates } from '@/services/endpoints/donor'
 import { downloadCertificate } from '@/services/endpoints/certificate'
 
 export default function DonorCertificates() {
@@ -22,8 +22,15 @@ export default function DonorCertificates() {
     queryFn: () => getCertificates({ page, limit: 12 }),
   })
 
+  const { data: pendingData } = useQuery({
+    queryKey: ['donor', 'certificates', 'pending'],
+    queryFn: getPendingCertificates,
+    staleTime: 30_000,
+  })
+
   const certs = data?.certificates ?? data ?? []
   const meta = data?.meta ?? {}
+  const pendingDonations = pendingData?.pending ?? []
 
   const handleDownload = async (cert) => {
     if (!cert.pdfPath) {
@@ -66,7 +73,7 @@ export default function DonorCertificates() {
           />
         )}
 
-        {!isLoading && !isError && certs.length > 0 && (
+        {!isLoading && !isError && (certs.length > 0 || pendingDonations.length > 0) && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {certs.map((cert) => (
               <CertCard
@@ -76,12 +83,46 @@ export default function DonorCertificates() {
                 loading={downloading === cert._id}
               />
             ))}
+            {pendingDonations.map((don) => (
+              <PendingCertCard key={don._id} donation={don} />
+            ))}
           </div>
         )}
 
         <Pagination page={page} total={meta.total ?? 0} limit={12} onPageChange={setPage} />
       </div>
     </AppShell>
+  )
+}
+
+function PendingCertCard({ donation }) {
+  return (
+    <Card className="opacity-70">
+      <CardContent className="pt-5 pb-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <Clock className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-400">Generating…</p>
+            <p className="text-sm font-semibold text-slate-600">
+              {donation.donationType?.replace('_', ' ') ?? 'Donation'}
+            </p>
+          </div>
+        </div>
+        <dl className="space-y-1 text-xs">
+          <div className="flex justify-between">
+            <dt className="text-slate-400">Donated</dt>
+            <dd className="text-slate-600">{donation.donatedAt ? format(new Date(donation.donatedAt), 'dd MMM yyyy') : '—'}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-slate-400">Hospital</dt>
+            <dd className="text-slate-600 truncate max-w-30 text-right">{donation.hospital?.name ?? '—'}</dd>
+          </div>
+        </dl>
+        <p className="text-xs text-slate-400 text-center">Certificate is being prepared</p>
+      </CardContent>
+    </Card>
   )
 }
 

@@ -144,6 +144,7 @@ const logout = async (req, res) => {
 };
 
 const me = async (req, res) => {
+  if (!req.user) return res.json({ user: null });
   return res.json({ user: sanitize(req.user, req.role) });
 };
 

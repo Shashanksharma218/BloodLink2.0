@@ -14,6 +14,7 @@ const {
   rejectDonation,
   getNearbyDonors,
   getDonorHistory,
+  getAcceptedPledges,
 } = require('../controllers/hospitalDashboardController');
 const { protect, hospitalOnly, requireVerifiedEmail } = require('../middleware/auth');
 
@@ -44,5 +45,7 @@ router.patch('/donations/:id/reject', rejectDonation);
 
 router.get('/donors', getNearbyDonors);
 router.get('/donors/:donorId', getDonorHistory);
+
+router.get('/pledges/accepted', getAcceptedPledges);
 
 module.exports = router;

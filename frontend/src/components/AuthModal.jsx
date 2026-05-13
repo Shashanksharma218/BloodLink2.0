@@ -109,9 +109,16 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
   const isLogin = mode === 'login'
   const isHospital = accountType === 'hospital'
 
+  const isDirty = isLogin
+    ? loginForm.formState.isDirty
+    : registerForm.formState.isDirty
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => { if (isDirty) e.preventDefault() }}
+      >
         <DialogHeader>
           <DialogTitle>{isLogin ? 'Welcome back' : 'Create your account'}</DialogTitle>
           <DialogDescription>
@@ -191,10 +198,10 @@ export default function AuthModal({ open, onOpenChange, initialMode = 'login' })
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Phone" error={registerForm.formState.errors.phone?.message}>
-                <Input {...registerForm.register('phone')} type="tel" />
+                <Input {...registerForm.register('phone')} type="tel" placeholder="10-digit number" />
               </Field>
               <Field label="Pincode" error={registerForm.formState.errors.pincode?.message}>
-                <Input {...registerForm.register('pincode')} maxLength={6} />
+                <Input {...registerForm.register('pincode')} maxLength={6} placeholder="6-digit code" />
               </Field>
             </div>
 

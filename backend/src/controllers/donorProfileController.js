@@ -137,10 +137,32 @@ const getDonorCertificates = async (req, res) => {
   }
 };
 
+const getDonorPendingCertificates = async (req, res) => {
+  try {
+    const Certificate = require('../models/Certificate');
+    // Find VERIFIED donations that have no certificate yet
+    const Donation = require('../models/Donation');
+    const verifiedDonations = await Donation.find({
+      donor: req.user._id,
+      state: 'VERIFIED',
+    }).select('_id donatedAt donationType hospital').populate('hospital', 'name');
+
+    const certifiedDonationIds = await Certificate.distinct('donation', { donor: req.user._id });
+    const certifiedSet = new Set(certifiedDonationIds.map(String));
+
+    const pending = verifiedDonations.filter((d) => !certifiedSet.has(String(d._id)));
+    return res.json({ pending });
+  } catch (err) {
+    console.error('getDonorPendingCertificates error:', err);
+    return res.status(500).json({ message: 'Failed to retrieve pending certificates' });
+  }
+};
+
 module.exports = {
   getDonorProfile,
   updateDonorProfile,
   getDonorDonations,
   getDonorPledges,
   getDonorCertificates,
+  getDonorPendingCertificates,
 };

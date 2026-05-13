@@ -10,14 +10,14 @@ const {
   forgotPassword,
   resetPassword,
 } = require('../controllers/authController');
-const { protect } = require('../middleware/auth');
+const { protect, softProtect } = require('../middleware/auth');
 
 const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', logout);
-router.get('/me', protect, me);
+router.get('/me', softProtect, me);
 
 router.get('/verify-email', verifyEmail);
 router.post('/resend-verification', protect, resendVerification);

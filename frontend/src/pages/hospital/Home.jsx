@@ -72,7 +72,7 @@ export default function HospitalHome() {
           <Link to="/hospital/donations">
             <StatCard
               icon={<Clock className="h-5 w-5 text-slate-500" />}
-              label="Awaiting Verify"
+              label="Awaiting Verification"
               value={pendingVerifyCount}
               bg="bg-slate-100"
             />

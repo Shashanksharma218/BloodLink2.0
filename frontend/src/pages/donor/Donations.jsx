@@ -41,34 +41,69 @@ export default function DonorDonations() {
         )}
 
         {!isLoading && !isError && donations.length > 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Units</TableHead>
-                  <TableHead>Hospital</TableHead>
-                  <TableHead>State</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {donations.map((d) => (
-                  <TableRow
-                    key={d._id}
-                    className="cursor-pointer"
-                    onClick={() => setDetail(d)}
-                  >
-                    <TableCell>{format(new Date(d.donatedAt), 'dd MMM yyyy')}</TableCell>
-                    <TableCell>{d.donationType?.replace('_', ' ')}</TableCell>
-                    <TableCell>{d.units}</TableCell>
-                    <TableCell>{d.hospital?.name ?? '—'}</TableCell>
-                    <TableCell><DonationStateBadge state={d.state} /></TableCell>
+          <>
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-3">
+              {donations.map((d) => (
+                <div
+                  key={d._id}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 cursor-pointer hover:bg-slate-50"
+                  onClick={() => setDetail(d)}
+                >
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="text-sm font-medium text-slate-800">
+                      {format(new Date(d.donatedAt), 'dd MMM yyyy')}
+                    </p>
+                    <DonationStateBadge state={d.state} />
+                  </div>
+                  <dl className="text-xs text-slate-600 space-y-1">
+                    <div className="flex justify-between">
+                      <dt className="text-slate-400">Type</dt>
+                      <dd>{d.donationType?.replace('_', ' ') ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-slate-400">Units</dt>
+                      <dd>{d.units}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-slate-400">Hospital</dt>
+                      <dd className="text-right truncate max-w-40">{d.hospital?.name ?? '—'}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block rounded-xl border border-slate-200 bg-white overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Units</TableHead>
+                    <TableHead>Hospital</TableHead>
+                    <TableHead>State</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {donations.map((d) => (
+                    <TableRow
+                      key={d._id}
+                      className="cursor-pointer"
+                      onClick={() => setDetail(d)}
+                    >
+                      <TableCell>{format(new Date(d.donatedAt), 'dd MMM yyyy')}</TableCell>
+                      <TableCell>{d.donationType?.replace('_', ' ')}</TableCell>
+                      <TableCell>{d.units}</TableCell>
+                      <TableCell>{d.hospital?.name ?? '—'}</TableCell>
+                      <TableCell><DonationStateBadge state={d.state} /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
 
         <Pagination page={page} total={meta.total ?? 0} limit={15} onPageChange={setPage} />

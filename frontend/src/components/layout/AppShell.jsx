@@ -8,8 +8,8 @@ export function AppShell({ children }) {
       <Topbar />
       <VerifyEmailBanner />
       <div className="flex flex-1">
-        {/* Sidebar — hidden on mobile, visible on md+ */}
-        <nav className="hidden md:flex w-56 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
+        {/* Sidebar — hidden on mobile/tablet, visible on lg+ */}
+        <nav className="hidden lg:flex w-56 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
           <Sidebar />
         </nav>
 

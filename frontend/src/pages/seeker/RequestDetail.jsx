@@ -113,25 +113,27 @@ export default function SeekerRequestDetail() {
 
           <TabsContent value="overview">
             <div className="space-y-4">
-              <InfoCard title="Patient">
-                <Row label="Name" value={req.patient?.name} />
-                <Row label="Age" value={req.patient?.age} />
-                <Row label="Gender" value={req.patient?.gender} />
-              </InfoCard>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <InfoCard title="Patient">
+                  <Row label="Name" value={req.patient?.name} />
+                  <Row label="Age" value={req.patient?.age} />
+                  <Row label="Gender" value={req.patient?.gender} />
+                </InfoCard>
+
+                {req.patientContact && (
+                  <InfoCard title="Contact Person">
+                    <Row label="Name" value={req.patientContact.name} />
+                    <Row label="Relation" value={req.patientContact.relationship} />
+                    <Row label="Phone" value={req.patientContact.phone} />
+                  </InfoCard>
+                )}
+              </div>
 
               <InfoCard title="Hospital">
                 <Row label="Name" value={req.hospital?.name} />
                 <Row label="Address" value={req.hospital?.address} />
                 <Row label="Pincode" value={req.hospital?.pincode} />
               </InfoCard>
-
-              {req.patientContact && (
-                <InfoCard title="Contact Person">
-                  <Row label="Name" value={req.patientContact.name} />
-                  <Row label="Relation" value={req.patientContact.relationship} />
-                  <Row label="Phone" value={req.patientContact.phone} />
-                </InfoCard>
-              )}
 
               {req.proofUrl && (
                 <InfoCard title="Proof Document">

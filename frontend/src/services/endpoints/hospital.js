@@ -14,3 +14,4 @@ export const verifyDonation = (id) => api.patch(`/hospital/donations/${id}/verif
 export const rejectDonation = (id, body) => api.patch(`/hospital/donations/${id}/reject`, body)
 export const getNearbyDonors = (params) => api.get('/hospital/donors', { params })
 export const getDonorHistory = (id) => api.get(`/hospital/donors/${id}`)
+export const getAcceptedPledges = (params) => api.get('/hospital/pledges/accepted', { params })

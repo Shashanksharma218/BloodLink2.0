@@ -5,6 +5,7 @@ const {
   getDonorDonations,
   getDonorPledges,
   getDonorCertificates,
+  getDonorPendingCertificates,
 } = require('../controllers/donorProfileController');
 const { protect, userOnly } = require('../middleware/auth');
 
@@ -17,5 +18,6 @@ router.patch('/profile', updateDonorProfile);
 router.get('/donations', getDonorDonations);
 router.get('/pledges', getDonorPledges);
 router.get('/certificates', getDonorCertificates);
+router.get('/certificates/pending', getDonorPendingCertificates);
 
 module.exports = router;

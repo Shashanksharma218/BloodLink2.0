@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ShieldCheck } from 'lucide-react'
 import { format } from 'date-fns'
 import { AppShell } from '@/components/layout/AppShell'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { LoadingState } from '@/components/shared/LoadingState'
@@ -20,6 +21,7 @@ const schema = z.object({
   name: z.string().min(2),
   phone: z.string().min(10).max(15),
   address: z.string().min(5),
+  licenseNumber: z.string().optional(),
 })
 
 const STATE_CONFIG = {
@@ -38,7 +40,7 @@ export default function HospitalProfile() {
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', phone: '', address: '' },
+    defaultValues: { name: '', phone: '', address: '', licenseNumber: '' },
   })
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export default function HospitalProfile() {
         name: profile.name ?? '',
         phone: profile.phone ?? '',
         address: profile.address ?? '',
+        licenseNumber: profile.licenseNumber ?? '',
       })
     }
   }, [profile])
@@ -64,6 +67,7 @@ export default function HospitalProfile() {
   if (isError) return <AppShell><ErrorState message={error.message} onRetry={refetch} /></AppShell>
 
   const stateCfg = STATE_CONFIG[profile?.state] ?? STATE_CONFIG.UNVERIFIED
+  const isVerified = profile?.state === 'VERIFIED'
 
   return (
     <AppShell>
@@ -76,7 +80,23 @@ export default function HospitalProfile() {
           <CardContent>
             <dl className="divide-y divide-slate-100 text-sm">
               <Row label="Pincode" value={profile?.pincode} />
-              <Row label="License number" value={profile?.licenseNumber} />
+              <Row
+                label="License number"
+                value={
+                  profile?.licenseNumber
+                    ? (
+                      <span className="flex items-center gap-1.5">
+                        {profile.licenseNumber}
+                        {isVerified && <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />}
+                      </span>
+                    )
+                    : (
+                      <span className="text-slate-400 text-xs">
+                        Add license to get verified
+                      </span>
+                    )
+                }
+              />
               <Row
                 label="Status"
                 value={<Badge variant={stateCfg.variant}>{stateCfg.label}</Badge>}
@@ -100,7 +120,14 @@ export default function HospitalProfile() {
                 <Input {...form.register('phone')} type="tel" />
               </Field>
               <Field label="Address" error={form.formState.errors.address?.message}>
-                <Input {...form.register('address')} />
+                <Textarea {...form.register('address')} rows={3} placeholder="Full address including street, city, state…" />
+              </Field>
+              <Field
+                label="License number"
+                error={form.formState.errors.licenseNumber?.message}
+                hint="Required for hospital verification"
+              >
+                <Input {...form.register('licenseNumber')} placeholder="e.g. DL-HOSP-2024-001" />
               </Field>
             </CardContent>
             <CardFooter className="justify-end">
@@ -125,10 +152,11 @@ function Row({ label, value }) {
   )
 }
 
-function Field({ label, children, error }) {
+function Field({ label, children, error, hint }) {
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
+      {hint && <p className="text-xs text-slate-400">{hint}</p>}
       {children}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>

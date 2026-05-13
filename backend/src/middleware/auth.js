@@ -53,4 +53,22 @@ const requireVerifiedEmail = (req, res, next) => {
   next();
 };
 
-module.exports = { protect, userOnly, hospitalOnly, requireVerifiedEmail };
+// Like protect but never returns 401 — used for /me so the browser console stays clean.
+const softProtect = async (req, res, next) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) { req.user = null; req.role = null; return next(); }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const Model = decoded.role === 'hospital' ? Hospital : User;
+    const account = await Model.findById(decoded.id).select('-password');
+    req.user = account ?? null;
+    req.role = account ? decoded.role : null;
+    next();
+  } catch {
+    req.user = null;
+    req.role = null;
+    next();
+  }
+};
+
+module.exports = { protect, softProtect, userOnly, hospitalOnly, requireVerifiedEmail };

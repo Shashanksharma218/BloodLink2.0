@@ -25,6 +25,7 @@ const SEEKER_NAV = [
   { to: '/seeker/requests', label: 'My Requests', icon: List },
   { to: '/seeker/requests/new', label: 'New Request', icon: PlusCircle },
   INVENTORY_NAV,
+  { to: '/donor/profile', label: 'Profile', icon: User },
 ]
 
 const HOSPITAL_NAV = [

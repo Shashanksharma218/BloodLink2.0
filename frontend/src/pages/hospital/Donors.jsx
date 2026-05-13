@@ -194,112 +194,158 @@ export default function HospitalDonors() {
         )}
 
         {!isLoading && !isError && donors.length > 0 && (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Donor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Pincode</TableHead>
-                    <TableHead>Last donated</TableHead>
-                    <TableHead className="text-right">Donations</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead className="text-right"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {donors.map((d) => (
-                    <TableRow
-                      key={d._id}
-                      className="cursor-pointer"
-                      onClick={() => setSelectedDonorId(d._id)}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-800">{d.name}</span>
-                          <BloodGroupBadge group={d.bloodGroup} />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DonorStatusBadge
-                          status={d.effectiveStatus}
-                          daysUntilAvailable={d.daysUntilAvailable}
-                        />
-                      </TableCell>
-                      <TableCell className="text-slate-600">{d.pincode}</TableCell>
-                      <TableCell className="text-slate-600">
-                        {d.lastDonationDate
-                          ? formatDistanceToNow(new Date(d.lastDonationDate), { addSuffix: true })
-                          : <span className="text-slate-400">Never</span>}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-slate-700">
-                        {d.donationsCount ?? 0}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex flex-col gap-0.5 text-xs">
-                          {d.phone && (
-                            <a
-                              href={`tel:${d.phone}`}
-                              className="inline-flex items-center gap-1 text-brand-600 hover:underline"
-                            >
-                              <Phone className="h-3 w-3" />{d.phone}
-                            </a>
-                          )}
-                          {d.email && (
-                            <a
-                              href={`mailto:${d.email}`}
-                              className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-600 hover:underline"
-                            >
-                              <Mail className="h-3 w-3" />
-                              <span className="truncate max-w-[180px]">{d.email}</span>
-                            </a>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); setSelectedDonorId(d._id) }}
-                        >
-                          View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <>
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-3">
+              {donors.map((d) => (
+                <Card key={d._id} className="cursor-pointer" onClick={() => setSelectedDonorId(d._id)}>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <p className="font-medium text-slate-800">{d.name}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Pincode {d.pincode}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <BloodGroupBadge group={d.bloodGroup} />
+                        <DonorStatusBadge status={d.effectiveStatus} daysUntilAvailable={d.daysUntilAvailable} />
+                      </div>
+                    </div>
+                    <dl className="text-xs text-slate-600 space-y-1">
+                      <div className="flex justify-between">
+                        <dt className="text-slate-400">Last donated</dt>
+                        <dd>{d.lastDonationDate ? formatDistanceToNow(new Date(d.lastDonationDate), { addSuffix: true }) : 'Never'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-slate-400">Donations</dt>
+                        <dd className="font-medium">{d.donationsCount ?? 0}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-2 flex flex-col gap-0.5 text-xs">
+                      {d.phone && (
+                        <a href={`tel:${d.phone}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+                          <Phone className="h-3 w-3" />{d.phone}
+                        </a>
+                      )}
+                      {d.email && (
+                        <a href={`mailto:${d.email}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-600 hover:underline">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate max-w-55">{d.email}</span>
+                        </a>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-                  <p className="text-xs text-slate-500">
-                    Page {page} of {totalPages} · {total} donor{total === 1 ? '' : 's'}
-                  </p>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5" />
-                      Prev
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                      Next
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
+            {/* Desktop: table */}
+            <Card className="hidden md:block">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Donor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Pincode</TableHead>
+                      <TableHead>Last donated</TableHead>
+                      <TableHead className="text-right">Donations</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead className="text-right"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {donors.map((d) => (
+                      <TableRow
+                        key={d._id}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedDonorId(d._id)}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-800">{d.name}</span>
+                            <BloodGroupBadge group={d.bloodGroup} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DonorStatusBadge
+                            status={d.effectiveStatus}
+                            daysUntilAvailable={d.daysUntilAvailable}
+                          />
+                        </TableCell>
+                        <TableCell className="text-slate-600">{d.pincode}</TableCell>
+                        <TableCell className="text-slate-600">
+                          {d.lastDonationDate
+                            ? formatDistanceToNow(new Date(d.lastDonationDate), { addSuffix: true })
+                            : <span className="text-slate-400">Never</span>}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-slate-700">
+                          {d.donationsCount ?? 0}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-col gap-0.5 text-xs">
+                            {d.phone && (
+                              <a
+                                href={`tel:${d.phone}`}
+                                className="inline-flex items-center gap-1 text-brand-600 hover:underline"
+                              >
+                                <Phone className="h-3 w-3" />{d.phone}
+                              </a>
+                            )}
+                            {d.email && (
+                              <a
+                                href={`mailto:${d.email}`}
+                                className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-600 hover:underline"
+                              >
+                                <Mail className="h-3 w-3" />
+                                <span className="truncate max-w-45">{d.email}</span>
+                              </a>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); setSelectedDonorId(d._id) }}
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+                    <p className="text-xs text-slate-500">
+                      Page {page} of {totalPages} · {total} donor{total === 1 ? '' : 's'}
+                    </p>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        Prev
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      >
+                        Next
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
 
@@ -323,7 +369,7 @@ function StatCard({ label, value, tone = 'slate' }) {
       <CardContent className="pt-5 pb-5">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className={cn('inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-md px-2 text-xl font-bold', toneClasses)}>
+          <span className={cn('inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-xl font-bold', toneClasses)}>
             {value}
           </span>
         </div>
@@ -411,7 +457,7 @@ function DonorDetailDialog({ donorId, onClose }) {
                   <ol className="relative space-y-4 border-l border-slate-200 pl-5">
                     {donations.map((don) => (
                       <li key={don._id} className="relative">
-                        <span className="absolute -left-[27px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-100 ring-4 ring-white">
+                        <span className="absolute -left-6.75 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-100 ring-4 ring-white">
                           <Heart className="h-2.5 w-2.5 text-brand-600" />
                         </span>
                         <div className="flex flex-wrap items-center gap-2">

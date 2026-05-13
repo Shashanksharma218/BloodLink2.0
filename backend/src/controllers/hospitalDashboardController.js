@@ -110,11 +110,12 @@ const getHospitalProfile = async (req, res) => {
 
 const updateHospitalProfile = async (req, res) => {
   try {
-    const { name, phone, address } = req.body;
+    const { name, phone, address, licenseNumber } = req.body;
     const hosp = req.user;
     if (name) hosp.name = name;
     if (phone) hosp.phone = phone;
     if (address) hosp.address = address;
+    if (licenseNumber !== undefined) hosp.licenseNumber = licenseNumber;
     await hosp.save();
     const h = hosp.toObject();
     delete h.password;
@@ -434,6 +435,37 @@ const getDonorHistory = async (req, res) => {
   }
 };
 
+const getAcceptedPledges = async (req, res) => {
+  try {
+    const { search = '', limit = 50 } = req.query;
+    const filter = {
+      hospital: req.user._id,
+      status: 'ACCEPTED',
+      state: { $exists: false },
+    };
+
+    const pledges = await Donation.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .populate('donor', 'name email phone bloodGroup')
+      .populate('request', 'patient');
+
+    const lower = search.toLowerCase();
+    const filtered = search
+      ? pledges.filter((p) => {
+          const donorName = p.donor?.name?.toLowerCase() ?? '';
+          const patientName = p.request?.patient?.name?.toLowerCase() ?? '';
+          return donorName.includes(lower) || patientName.includes(lower);
+        })
+      : pledges;
+
+    return res.json({ pledges: filtered });
+  } catch (err) {
+    console.error('getAcceptedPledges error:', err);
+    return res.status(500).json({ message: 'Failed to load accepted pledges' });
+  }
+};
+
 module.exports = {
   getHospitalProfile,
   updateHospitalProfile,
@@ -448,4 +480,5 @@ module.exports = {
   rejectDonation,
   getNearbyDonors,
   getDonorHistory,
+  getAcceptedPledges,
 };

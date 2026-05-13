@@ -1,15 +1,24 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import * as authEndpoints from '@/services/endpoints/auth'
 
 const AuthContext = createContext(null)
 
 const MODE_KEY = 'bloodlink:mode'
 
+function deriveMode(pathname, manualMode) {
+  if (pathname.startsWith('/seeker')) return 'seeker'
+  if (pathname.startsWith('/donor')) return 'donor'
+  return manualMode
+}
+
 export function AuthProvider({ children }) {
   const [account, setAccount] = useState(null)
   const [loading, setLoading] = useState(true)
-  // 'donor' | 'seeker' — only meaningful for users with both roles
-  const [mode, setModeState] = useState(() => localStorage.getItem(MODE_KEY) || 'donor')
+  const [manualMode, setManualMode] = useState(() => localStorage.getItem(MODE_KEY) || 'donor')
+  const location = useLocation()
+
+  const mode = deriveMode(location.pathname, manualMode)
 
   const refresh = useCallback(async () => {
     try {
@@ -55,7 +64,7 @@ export function AuthProvider({ children }) {
 
   const setMode = (m) => {
     localStorage.setItem(MODE_KEY, m)
-    setModeState(m)
+    setManualMode(m)
   }
 
   const isDonor = account?.role === 'user'

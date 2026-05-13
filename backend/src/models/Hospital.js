@@ -32,6 +32,10 @@ const hospitalSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    licenseNumber: {
+      type: String,
+      trim: true,
+    },
     isVerified: {
       type: Boolean,
       default: false,

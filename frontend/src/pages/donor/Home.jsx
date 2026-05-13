@@ -58,7 +58,8 @@ export default function DonorHome() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard
             title="Donor Status"
-            value={<Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>}
+            value={<Badge variant={statusCfg.variant} className="text-sm px-2.5 py-0.5">{statusCfg.label}</Badge>}
+            icon={<HeartPulse className="h-4 w-4 text-brand-400" />}
             sub={profile?.daysUntilAvailable > 0 ? `${profile.daysUntilAvailable} days left` : null}
           />
           <StatCard
