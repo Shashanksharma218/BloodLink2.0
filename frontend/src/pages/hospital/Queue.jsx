@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { FileText, CheckCircle, XCircle, Maximize2, ExternalLink, X } from 'lucide-react'
+import { FileText, CheckCircle, XCircle, Maximize2, ExternalLink, X, ClipboardList } from 'lucide-react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
@@ -11,11 +12,12 @@ import { BloodGroupBadge } from '@/components/shared/BloodGroupBadge'
 import { UrgencyBadge } from '@/components/shared/UrgencyBadge'
 import { TableSkeleton } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
-import { EmptyState } from '@/components/shared/EmptyState'
 import { ReasonDialog } from '@/components/shared/ReasonDialog'
+import { EmptyMascot } from '@/components/dashboard/EmptyMascot'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { getHospitalRequests, verifyRequest, rejectRequest } from '@/services/endpoints/hospital'
 import { REQUEST_REJECT } from '@/lib/enums'
+import { MOTION_FADE_UP } from '@/components/dashboard/theme'
 
 const REJECT_CATS = [
   { value: REQUEST_REJECT.INVALID_PROOF, label: 'Invalid proof document' },
@@ -36,8 +38,7 @@ export default function HospitalQueue() {
     staleTime: 0,
   })
 
-  // eslint-disable-next-line dot-notation
-  const requests = data?.['requests'] ?? data ?? []
+  const requests = data?.requests ?? data ?? []
 
   const { mutate: doVerify, isPending: verifying } = useMutation({
     mutationFn: verifyRequest,
@@ -63,24 +64,31 @@ export default function HospitalQueue() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-slate-900">Verification Queue</h1>
+        <motion.div {...MOTION_FADE_UP} className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+            <ClipboardList className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Verification Queue</h1>
+            <p className="text-sm text-slate-500">{requests.length} request{requests.length !== 1 ? 's' : ''} awaiting review</p>
+          </div>
+        </motion.div>
 
         {isLoading && <TableSkeleton />}
         {isError && <ErrorState message={error.message} onRetry={refetch} />}
 
         {!isLoading && !isError && requests.length === 0 && (
-          <EmptyState
-            icon={CheckCircle}
-            title="Queue is clear"
+          <EmptyMascot
+            title="Queue is clear! 🎉"
             description="No blood requests are pending verification right now."
           />
         )}
 
         {!isLoading && !isError && requests.length > 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <motion.div {...MOTION_FADE_UP} className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-slate-50">
                   <TableHead>Blood</TableHead>
                   <TableHead>Urgency</TableHead>
                   <TableHead>Patient</TableHead>
@@ -90,27 +98,28 @@ export default function HospitalQueue() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.map((req) => (
-                  <TableRow
+                {requests.map((req, i) => (
+                  <motion.tr
                     key={req._id}
-                    className="cursor-pointer"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="cursor-pointer hover:bg-amber-50/50 transition-colors border-b border-slate-100 last:border-0"
                     onClick={() => setDetail(req)}
                   >
                     <TableCell><BloodGroupBadge group={req.bloodGroup} /></TableCell>
                     <TableCell><UrgencyBadge urgency={req.urgency} /></TableCell>
-                    <TableCell>{req.patient?.name ?? '—'}</TableCell>
-                    <TableCell>{req.unitsRequired}</TableCell>
-                    <TableCell>{format(new Date(req.createdAt), 'dd MMM, h:mm a')}</TableCell>
+                    <TableCell className="font-medium text-slate-800">{req.patient?.name ?? '—'}</TableCell>
+                    <TableCell className="text-slate-600">{req.unitsRequired}</TableCell>
+                    <TableCell className="text-slate-500 text-xs">{format(new Date(req.createdAt), 'dd MMM, h:mm a')}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setDetail(req) }}>
-                        Review
-                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs h-7">Review</Button>
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -173,11 +182,7 @@ export default function HospitalQueue() {
               )}
 
               <div className="flex gap-2 pt-2">
-                <Button
-                  className="flex-1"
-                  onClick={() => doVerify(detail._id)}
-                  disabled={verifying || rejecting}
-                >
+                <Button className="flex-1" onClick={() => doVerify(detail._id)} disabled={verifying || rejecting}>
                   <CheckCircle className="h-4 w-4" />
                   Verify
                 </Button>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/context/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { CelebrationProvider } from '@/components/dashboard/CelebrationOverlay'
 import { Loader2 } from 'lucide-react'
 
 // Public
@@ -61,6 +62,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <CelebrationProvider>
         <Toaster position="bottom-right" richColors closeButton />
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -111,6 +113,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </CelebrationProvider>
       </AuthProvider>
     </BrowserRouter>
   )

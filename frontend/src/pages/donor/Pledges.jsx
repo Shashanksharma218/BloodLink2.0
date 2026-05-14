@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { Phone, ExternalLink } from 'lucide-react'
+import { Phone, ExternalLink, HeartPulse } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PledgeStatusBadge } from '@/components/shared/PledgeStatusBadge'
 import { BloodGroupBadge } from '@/components/shared/BloodGroupBadge'
-import { EmptyState } from '@/components/shared/EmptyState'
 import { LoadingState } from '@/components/shared/LoadingState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { ReasonDialog } from '@/components/shared/ReasonDialog'
+import { EmptyMascot } from '@/components/dashboard/EmptyMascot'
 import { getPledges } from '@/services/endpoints/donor'
 import { cancelPledge } from '@/services/endpoints/pledge'
 import { PLEDGE_CANCEL } from '@/lib/enums'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { MOTION_FADE_UP, staggerChild } from '@/components/dashboard/theme'
 
 const CANCEL_CATS = [
   { value: PLEDGE_CANCEL.SCHEDULE_CONFLICT, label: 'Schedule conflict' },
@@ -52,45 +53,64 @@ export default function DonorPledges() {
   })
 
   const active = activePledges?.pledges ?? activePledges ?? []
-  const history = (historyPledges?.pledges ?? historyPledges ?? []).filter(
-    (p) => p.status !== 'ACCEPTED'
-  )
+  const history = (historyPledges?.pledges ?? historyPledges ?? []).filter((p) => p.status !== 'ACCEPTED')
 
   return (
     <AppShell>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-slate-900">My Pledges</h1>
+        <motion.div {...MOTION_FADE_UP} className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
+            <HeartPulse className="h-5 w-5 text-brand-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">My Pledges</h1>
+            <p className="text-sm text-slate-500">{active.length} active · {history.length} historical</p>
+          </div>
+        </motion.div>
 
         <Tabs defaultValue="active">
-          <TabsList>
-            <TabsTrigger value="active">Active ({active.length})</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+          <TabsList className="rounded-xl bg-slate-100">
+            <TabsTrigger value="active" className="rounded-lg">Active ({active.length})</TabsTrigger>
+            <TabsTrigger value="history" className="rounded-lg">History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="active">
+          <TabsContent value="active" className="mt-4">
             {aL && <LoadingState />}
             {aE && <ErrorState message={aE.message} onRetry={aR} />}
             {!aL && !aE && active.length === 0 && (
-              <EmptyState title="No active pledges" description="Accept a request from the feed to get started." />
-            )}
-            {!aL && !aE && active.map((pledge) => (
-              <PledgeCard
-                key={pledge._id}
-                pledge={pledge}
-                onCancel={() => setCancelTarget(pledge._id)}
+              <EmptyMascot
+                title="No active pledges"
+                description="Accept a request from the feed to get started."
+                action="Browse requests"
+                actionTo="/donor/feed"
               />
-            ))}
+            )}
+            {!aL && !aE && (
+              <div className="space-y-3">
+                {active.map((pledge, i) => (
+                  <motion.div key={pledge._id} {...MOTION_FADE_UP} {...staggerChild(i)}>
+                    <PledgeCard pledge={pledge} onCancel={() => setCancelTarget(pledge._id)} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
-          <TabsContent value="history">
+          <TabsContent value="history" className="mt-4">
             {hL && <LoadingState />}
             {hE && <ErrorState message={hE.message} onRetry={hR} />}
             {!hL && !hE && history.length === 0 && (
-              <EmptyState title="No pledge history yet" />
+              <EmptyMascot title="No pledge history yet" />
             )}
-            {!hL && !hE && history.map((pledge) => (
-              <PledgeCard key={pledge._id} pledge={pledge} />
-            ))}
+            {!hL && !hE && (
+              <div className="space-y-3">
+                {history.map((pledge, i) => (
+                  <motion.div key={pledge._id} {...MOTION_FADE_UP} {...staggerChild(i)}>
+                    <PledgeCard pledge={pledge} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -118,23 +138,32 @@ function PledgeCard({ pledge, onCancel }) {
   const isTerminal = ['FULFILLED', 'CANCELLED', 'NO_SHOW', 'VOID'].includes(pledge.status)
 
   return (
-    <Card className={`mt-3 ${isTerminal ? 'opacity-70' : ''}`}>
-      <CardContent className="pt-4 pb-4">
+    <motion.div
+      whileHover={!isTerminal ? { y: -2 } : {}}
+      transition={{ duration: 0.15 }}
+      className={`rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden ${
+        isTerminal ? 'opacity-60' : ''
+      } ${isActive ? 'border-l-4 border-l-brand-500' : ''}`}
+    >
+      <div className="px-5 py-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 space-y-1.5">
-            {req && (
+          <div className="flex-1 space-y-2">
+            {req ? (
               <>
                 <div className="flex items-center gap-2 flex-wrap">
                   <BloodGroupBadge group={req.bloodGroup} />
                   <PledgeStatusBadge status={pledge.status} />
                 </div>
-                <p className="text-sm font-medium text-slate-800">
-                  {req.hospital?.name ?? 'Hospital'}
-                </p>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{req.hospital?.name ?? 'Hospital'}</p>
+                  {req.hospital?.address && (
+                    <p className="text-xs text-slate-500 mt-0.5">{req.hospital.address}</p>
+                  )}
+                </div>
                 {isActive && req.hospital?.phone && (
                   <a
                     href={`tel:${req.hospital.phone}`}
-                    className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-700 hover:underline"
                   >
                     <Phone className="h-3 w-3" />
                     {req.hospital.phone}
@@ -144,26 +173,32 @@ function PledgeCard({ pledge, onCancel }) {
                   Pledged {formatDistanceToNow(new Date(pledge.createdAt), { addSuffix: true })}
                 </p>
               </>
+            ) : (
+              <p className="text-sm text-slate-400">Request details unavailable</p>
             )}
           </div>
 
-          <div className="flex flex-col gap-2 items-end">
+          <div className="flex flex-col gap-2 items-end shrink-0">
             {req && (
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="h-7 w-7 p-0">
                 <Link to={`/seeker/requests/${req._id}`}>
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               </Button>
             )}
             {isActive && onCancel && (
-              <Button variant="outline" size="sm" onClick={onCancel}
-                className="border-red-200 text-red-600 hover:bg-red-50">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                className="border-red-200 text-red-600 hover:bg-red-50 text-xs h-7"
+              >
                 Cancel
               </Button>
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </motion.div>
   )
 }
